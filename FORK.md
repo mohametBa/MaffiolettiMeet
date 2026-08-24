@@ -62,15 +62,56 @@ conflits lors d'un rebase sur l'amont.
    (`$APPDATA`) : une installation Meetily existante sur le même poste ne sera
    pas reprise.
 
+6. **Identité visuelle** — icône de l'app et assets d'interface repris du logo
+   Maffioletti. Les fichiers de travail sont dans [`brand/`](brand/) ; le master
+   de l'icône est `frontend/src-tauri/app-icon.png` (1024×1024).
+   Pour la régénérer après modification :
+
+   ```bash
+   cd frontend
+   pnpm tauri icon src-tauri/app-icon.png
+   rm -rf src-tauri/icons/android src-tauri/icons/ios   # desktop only
+   ```
+
+## Construire l'app
+
+Prérequis (installés sur le Mac mini) : Node 20+, pnpm, Rust stable, cmake,
+Xcode Command Line Tools.
+
+```bash
+cd frontend
+pnpm install
+node scripts/prepare-ffmpeg-sidecar.mjs   # sidecar ffmpeg, voir ci-dessous
+./build-gpu.sh                            # detecte le GPU, compile llama-helper puis l'app
+```
+
+Le premier build compile whisper.cpp et llama.cpp : 15–30 min et plusieurs Go.
+Le `.dmg` sort dans `target/release/bundle/dmg/`.
+
+### Le sidecar ffmpeg
+
+`tauri.conf.json` déclare `externalBin: ["binaries/llama-helper", "binaries/ffmpeg"]`.
+`build-gpu.sh` fabrique bien `llama-helper`, mais **rien dans l'amont ne fournit
+`ffmpeg`** : sans lui le bundle échoue, et à l'exécution l'app irait le
+télécharger toute seule sur Internet puis l'installer dans `~/.local/bin`
+(`src-tauri/src/audio/ffmpeg.rs`) — exactement ce qu'on ne veut pas.
+
+`scripts/prepare-ffmpeg-sidecar.mjs` copie le binaire statique du paquet npm
+`ffmpeg-static` sous le nom attendu (`ffmpeg-<target-triple>`). Le dossier
+`src-tauri/binaries/` est dans le `.gitignore` : le script est à relancer après
+chaque clone.
+
+⚠️ **Licence** : le binaire d'`ffmpeg-static` est compilé en `--enable-gpl
+--enable-nonfree`, une combinaison qui n'est pas redistribuable. L'app ne s'en
+sert que pour encoder en AAC/MP4 et décoder des fichiers audio — ce que fait
+n'importe quelle compilation LGPL de base. **Avant de diffuser le `.dmg`**,
+remplacer ce binaire par un build LGPL (ou GPL simple) d'ffmpeg. Le fork
+lui-même reste MIT : ffmpeg est appelé comme processus séparé, jamais lié.
+
 ## Reste à faire
 
-- **Icônes** : fournir un PNG carré 1024×1024 du logo Maffioletti puis
-  `cd frontend && pnpm tauri icon chemin/vers/logo-1024.png`.
-  `bundle.icon` pointe déjà vers `icons/icon.png|icns|ico`, les noms que la
-  commande produit.
 - **Italianisation de l'interface** (`frontend/src/`), chantier à part.
-- **Premier build** : `cd frontend && pnpm install && pnpm tauri build:metal`
-  (compte 15–30 min la première fois, whisper.cpp est compilé).
+- **Remplacer le binaire ffmpeg** par un build redistribuable (voir ci-dessus).
 
 ## Au rebase, vérifier en priorité
 
