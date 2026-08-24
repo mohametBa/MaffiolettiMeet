@@ -77,3 +77,6 @@ experiments/
 target/
 
 frontend/src-tauri/binaries/
+# ffmpeg redistribuable, fabrique par scripts/build-ffmpeg-lgpl.sh (macOS)
+# ou scripts/fetch-ffmpeg-windows.ps1 (Windows) — voir FORK.md
+frontend/src-tauri/vendor/

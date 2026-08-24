@@ -75,18 +75,48 @@ conflits lors d'un rebase sur l'amont.
 
 ## Construire l'app
 
-Prérequis (installés sur le Mac mini) : Node 20+, pnpm, Rust stable, cmake,
-Xcode Command Line Tools.
+### macOS (Apple Silicon)
+
+Prérequis : Node 20+, pnpm, Rust stable, cmake, Xcode Command Line Tools.
 
 ```bash
 cd frontend
 pnpm install
-node scripts/prepare-ffmpeg-sidecar.mjs   # sidecar ffmpeg, voir ci-dessous
-./build-gpu.sh                            # detecte le GPU, compile llama-helper puis l'app
+./scripts/build-ffmpeg-lgpl.sh            # une fois : compile le ffmpeg redistribuable
+node scripts/prepare-ffmpeg-sidecar.mjs   # installe le sidecar
+./build-gpu.sh                            # détecte le GPU, compile llama-helper puis l'app
 ```
 
 Le premier build compile whisper.cpp et llama.cpp : 15–30 min et plusieurs Go.
 Le `.dmg` sort dans `target/release/bundle/dmg/`.
+
+Le binaire produit est spécifique à l'architecture : un build Apple Silicon ne
+tourne **pas** sur un Mac Intel. Pour un poste Intel, refaire le build sur un
+Mac Intel (les scripts sont les mêmes).
+
+### Windows
+
+Le build Windows doit se faire **sur une machine Windows** : whisper.cpp et
+llama.cpp sont compilés avec MSVC, il n'y a pas de compilation croisée depuis
+macOS.
+
+Prérequis : Node 20+, pnpm, Rust stable (toolchain `x86_64-pc-windows-msvc`),
+Visual Studio Build Tools avec la charge de travail « Développement Desktop
+en C++ », CMake, Git.
+
+```powershell
+cd frontend
+pnpm install
+powershell -ExecutionPolicy Bypass -File scripts\fetch-ffmpeg-windows.ps1
+node scripts/prepare-ffmpeg-sidecar.mjs
+.\build-gpu.bat
+```
+
+⚠️ **Ne pas utiliser `build.ps1`** : ce script exige `TAURI_SIGNING_PRIVATE_KEY`,
+qui servait à signer les artefacts d'updater qu'on ne produit plus. Il refusera
+de démarrer. `build-gpu.bat` fait le vrai travail.
+
+Le `.msi` et l'installeur NSIS sortent dans `target\release\bundle\`.
 
 ### Le sidecar ffmpeg
 
@@ -96,22 +126,73 @@ Le `.dmg` sort dans `target/release/bundle/dmg/`.
 télécharger toute seule sur Internet puis l'installer dans `~/.local/bin`
 (`src-tauri/src/audio/ffmpeg.rs`) — exactement ce qu'on ne veut pas.
 
-`scripts/prepare-ffmpeg-sidecar.mjs` copie le binaire statique du paquet npm
-`ffmpeg-static` sous le nom attendu (`ffmpeg-<target-triple>`). Le dossier
-`src-tauri/binaries/` est dans le `.gitignore` : le script est à relancer après
-chaque clone.
+L'app ne demande à ffmpeg que deux choses : encoder en AAC/MP4 (encodeur natif)
+et décoder des fichiers audio. Aucun composant GPL n'est nécessaire, donc on
+utilise une build **LGPL v2.1**, seule redistribuable :
 
-⚠️ **Licence** : le binaire d'`ffmpeg-static` est compilé en `--enable-gpl
---enable-nonfree`, une combinaison qui n'est pas redistribuable. L'app ne s'en
-sert que pour encoder en AAC/MP4 et décoder des fichiers audio — ce que fait
-n'importe quelle compilation LGPL de base. **Avant de diffuser le `.dmg`**,
-remplacer ce binaire par un build LGPL (ou GPL simple) d'ffmpeg. Le fork
-lui-même reste MIT : ffmpeg est appelé comme processus séparé, jamais lié.
+- macOS : `scripts/build-ffmpeg-lgpl.sh` compile ffmpeg 7.1.1 depuis les sources
+  officielles, en statique, sans dépendance externe (`--disable-autodetect`) et
+  sans pile réseau (`--disable-network` : ffmpeg ne peut pas ouvrir d'URL).
+- Windows : `scripts/fetch-ffmpeg-windows.ps1` récupère la build **lgpl** de
+  BtbN/FFmpeg-Builds.
+
+`scripts/prepare-ffmpeg-sidecar.mjs` copie ensuite le binaire sous le nom attendu
+par Tauri et **refuse** un binaire compilé `--enable-gpl` ou `--enable-nonfree`.
+`src-tauri/vendor/` et `src-tauri/binaries/` sont dans le `.gitignore` : ces deux
+étapes sont à refaire après chaque clone.
+
+Conformité LGPL : conserver `scripts/build-ffmpeg-lgpl.sh`. Il contient la
+version exacte et la ligne de configuration, ce qui suffit à reconstruire le
+binaire à l'identique depuis les sources publiques — c'est ce que la licence
+demande de pouvoir fournir.
+
+## Distribuer l'app en interne
+
+Le DMG fait une quarantaine de Mo, tout est dedans (modèles exclus, voir plus bas).
+
+### macOS — Gatekeeper
+
+L'app est signée en ad-hoc (`signingIdentity: "-"`), pas avec un certificat
+Apple. Conséquence : si le fichier arrive avec l'attribut de **quarantaine**
+(navigateur, mail, Drive, Slack), macOS refuse de l'ouvrir. Depuis macOS 15,
+le raccourci « clic droit → Ouvrir » ne suffit plus : il faut passer par
+**Réglages Système → Confidentialité et sécurité → « Ouvrir quand même »**.
+
+Deux contournements :
+
+- **Transporter le DMG par partage réseau interne (SMB) ou AirDrop** : ces
+  chemins ne posent pas l'attribut de quarantaine, l'app s'ouvre normalement.
+- **Retirer la quarantaine à la main** après installation :
+  `xattr -dr com.apple.quarantine "/Applications/Maffioletti Meet.app"`
+
+La vraie solution, au-delà de quelques postes : un compte Apple Developer
+(99 $/an), un certificat *Developer ID Application* et la notarisation. Tauri
+s'en charge si `APPLE_ID`, `APPLE_PASSWORD` et `APPLE_TEAM_ID` sont dans
+l'environnement au moment du build (sinon il affiche `skipping app notarization`).
+
+### Windows — SmartScreen
+
+Sans certificat de signature de code, SmartScreen affiche « Windows a protégé
+votre ordinateur » au premier lancement : *Informations complémentaires* →
+*Exécuter quand même*. Un certificat OV (~200–400 €/an) fait disparaître
+l'avertissement une fois la réputation établie ; un certificat EV le fait
+disparaître immédiatement.
+
+### Premier démarrage
+
+L'app demande l'accès au micro et à l'enregistrement d'écran, puis télécharge
+les modèles (Whisper pour la transcription, un modèle de langue pour les
+résumés) depuis Hugging Face — plusieurs centaines de Mo à plusieurs Go selon le
+modèle. Ce téléchargement part du code Rust, qui n'est pas soumis à la CSP.
+Aucune donnée de réunion ne sort du poste ; l'app va chercher ses modèles une
+fois, à l'installation.
 
 ## Reste à faire
 
+- **Build Windows** : à produire sur une machine Windows (voir plus haut).
 - **Italianisation de l'interface** (`frontend/src/`), chantier à part.
-- **Remplacer le binaire ffmpeg** par un build redistribuable (voir ci-dessus).
+- **Signature** : compte Apple Developer et/ou certificat de signature Windows,
+  si les avertissements au premier lancement posent problème.
 
 ## Au rebase, vérifier en priorité
 
