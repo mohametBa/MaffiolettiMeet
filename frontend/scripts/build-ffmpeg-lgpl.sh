@@ -40,7 +40,7 @@ cd "ffmpeg-$FFMPEG_VERSION"
 
 echo "Configuration (LGPL v2.1, statique, sans reseau)..."
 ./configure \
-  --prefix="$WORKDIR/out" \
+  --prefix=/usr/local \
   --disable-autodetect \
   --disable-gpl \
   --disable-nonfree \
@@ -53,6 +53,9 @@ echo "Configuration (LGPL v2.1, statique, sans reseau)..."
   --disable-doc \
   --disable-debug \
   --enable-pthreads
+# NB : --prefix n'est jamais utilise (on ne fait pas `make install`), mais il
+# apparait dans la ligne de configuration affichee par `ffmpeg -version`.
+# On le fixe pour que cette ligne reste lisible et reproductible.
 
 echo "Compilation..."
 make -j"$(sysctl -n hw.ncpu)"
