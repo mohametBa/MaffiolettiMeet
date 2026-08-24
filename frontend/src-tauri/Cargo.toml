@@ -1,10 +1,10 @@
 [package]
-name = "meetily"
-version = "0.4.0"
-description = "A Tauri App for meeting minutes"
-authors = ["Sujith S"]
+name = "maffioletti-meet"
+version = "0.1.0"
+description = "Maffioletti Meet - prise de notes de réunion en local"
+authors = ["Maffioletti"]
 license = "MIT"
-repository = "https://github.com/Zackriya-Solutions/meeting-minutes"
+repository = "https://github.com/mohametBa/MaffiolettiMeet"
 edition = "2021"
 rust-version = "1.77"
 

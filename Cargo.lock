@@ -3610,8 +3610,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "meetily"
-version = "0.4.0"
+name = "maffioletti-meet"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",

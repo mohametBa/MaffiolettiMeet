@@ -1815,7 +1815,7 @@ async fn save_transcript(file_path: String, content: String) -> Result<(), Strin
 #[tauri::command]
 async fn init_analytics() -> Result<(), String> {
     let config = AnalyticsConfig {
-        api_key:"phc_cohhHPgfQfnNWl33THRRpCftuRtWx2k5svtKrkpFb04".to_string(),
+        api_key: String::new(),
         host: Some("https://us.i.posthog.com".to_string()),
         enabled: true ,
     };
