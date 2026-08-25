@@ -114,7 +114,7 @@ export function PermissionsStep() {
   return (
     <OnboardingContainer
       title="Grant Permissions"
-      description="Maffioletti Meet needs access to your microphone and system audio to record meetings"
+      description="Atex Italia Meeting needs access to your microphone and system audio to record meetings"
       step={4}
       hideProgress={true}
       showNavigation={allPermissionsGranted}

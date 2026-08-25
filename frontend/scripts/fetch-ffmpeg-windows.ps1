@@ -1,4 +1,4 @@
-# Recupere un ffmpeg LGPL pour Windows (sidecar de Maffioletti Meet).
+# Recupere un ffmpeg LGPL pour Windows (sidecar de Atex Italia Meeting).
 #
 # Pendant du script macOS scripts/build-ffmpeg-lgpl.sh : sur Windows on ne
 # recompile pas ffmpeg, on prend la build LGPL publiee par BtbN/FFmpeg-Builds.

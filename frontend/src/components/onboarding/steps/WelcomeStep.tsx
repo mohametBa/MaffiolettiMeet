@@ -24,7 +24,7 @@ export function WelcomeStep() {
 
   return (
     <OnboardingContainer
-      title="Welcome to Maffioletti Meet"
+      title="Welcome to Atex Italia Meeting"
       description="Record. Transcribe. Summarize. All on your device."
       step={1}
       hideProgress={true}

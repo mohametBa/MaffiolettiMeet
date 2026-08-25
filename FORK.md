@@ -1,11 +1,11 @@
-# Maffioletti Meet — fork de Meetily
+# Atex Italia Meeting — fork de Meetily
 
 Ce dépôt est un fork de [Zackriya-Solutions/meeting-minutes](https://github.com/Zackriya-Solutions/meeting-minutes)
 (Meetily, licence MIT). Le fichier `LICENSE.md` et la mention de copyright
 Zackriya Solutions sont conservés ; l'écran « À propos » de l'application indique
 « Basato su Meetily (licenza MIT) ».
 
-Le plan complet est dans [PLAN_App_Maffioletti_Meet.md](PLAN_App_Maffioletti_Meet.md).
+Le plan complet est dans [PLAN_App_Atex_Italia_Meeting.md](PLAN_App_Atex_Italia_Meeting.md).
 
 ## Remotes
 
@@ -55,7 +55,7 @@ conflits lors d'un rebase sur l'amont.
    signer les artefacts d'updater) : sous Windows, appeler `build-gpu.bat`
    directement.
 
-5. **Rebranding** — `productName` / `identifier` (`it.maffioletti.meet`) /
+5. **Rebranding** — `productName` / `identifier` (`it.atexitalia.meeting`) /
    titre de fenêtre / `package.json` / `Cargo.toml`, version repartie à `0.1.0`,
    et les libellés visibles de l'interface.
    ⚠️ Le changement d'`identifier` change l'emplacement des données
@@ -63,7 +63,7 @@ conflits lors d'un rebase sur l'amont.
    pas reprise.
 
 6. **Identité visuelle** — icône de l'app et assets d'interface repris du logo
-   Maffioletti. Les fichiers de travail sont dans [`brand/`](brand/) ; le master
+   Atex Italia. Les fichiers de travail sont dans [`brand/`](brand/) ; le master
    de l'icône est `frontend/src-tauri/app-icon.png` (1024×1024).
    Pour la régénérer après modification :
 
@@ -102,7 +102,7 @@ GitHub, soit sur un poste.
 
 #### Via GitHub Actions (recommandé)
 
-[`.github/workflows/maffioletti-windows.yml`](.github/workflows/maffioletti-windows.yml)
+[`.github/workflows/atex-italia-windows.yml`](.github/workflows/atex-italia-windows.yml)
 rejoue sur `windows-latest` exactement les étapes décrites plus bas. Le dépôt
 étant public, les minutes sont gratuites.
 
@@ -184,7 +184,7 @@ Deux contournements :
 - **Transporter le DMG par partage réseau interne (SMB) ou AirDrop** : ces
   chemins ne posent pas l'attribut de quarantaine, l'app s'ouvre normalement.
 - **Retirer la quarantaine à la main** après installation :
-  `xattr -dr com.apple.quarantine "/Applications/Maffioletti Meet.app"`
+  `xattr -dr com.apple.quarantine "/Applications/Atex Italia Meeting.app"`
 
 La vraie solution, au-delà de quelques postes : un compte Apple Developer
 (99 $/an), un certificat *Developer ID Application* et la notarisation. Tauri

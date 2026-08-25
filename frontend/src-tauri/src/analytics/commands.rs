@@ -9,7 +9,7 @@ static ANALYTICS_CLIENT: std::sync::Mutex<Option<Arc<AnalyticsClient>>> = std::s
 #[command]
 pub async fn init_analytics() -> Result<(), String> {
     let config = AnalyticsConfig {
-        // Maffioletti Meet : aucune télémétrie. Clé vide + enabled: false =>
+        // Atex Italia Meeting : aucune télémétrie. Clé vide + enabled: false =>
         // AnalyticsClient::new ne crée aucun client PostHog ; les commandes
         // track_* restent présentes mais ne font plus rien.
         api_key: String::new(),

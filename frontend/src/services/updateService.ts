@@ -25,9 +25,9 @@ export interface UpdateProgress {
 }
 
 /**
- * Maffioletti Meet : les mises à jour automatiques sont désactivées.
+ * Atex Italia Meeting : les mises à jour automatiques sont désactivées.
  * Remettre à `true` uniquement après avoir remis un bloc `plugins.updater`
- * (endpoint + pubkey Maffioletti) dans tauri.conf.json et réenregistré
+ * (endpoint + pubkey Atex Italia) dans tauri.conf.json et réenregistré
  * tauri_plugin_updater dans src-tauri/src/lib.rs.
  */
 const UPDATES_ENABLED: boolean = false;
@@ -47,7 +47,7 @@ export class UpdateService {
    * @returns Promise with update information
    */
   async checkForUpdates(force = false): Promise<UpdateInfo> {
-    // Maffioletti Meet : aucun canal de mise à jour. Le plugin updater n'est
+    // Atex Italia Meeting : aucun canal de mise à jour. Le plugin updater n'est
     // plus enregistré côté Rust (voir src-tauri/src/lib.rs) et tauri.conf.json
     // ne déclare plus d'endpoint : on court-circuite ici pour ne jamais
     // appeler check(), qui échouerait.

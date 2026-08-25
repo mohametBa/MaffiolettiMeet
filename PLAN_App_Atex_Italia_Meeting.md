@@ -1,9 +1,9 @@
-# Maffioletti Meet — fork du client Meetily
+# Atex Italia Meeting — fork du client Meetily
 
 Base : `Zackriya-Solutions/meetily`, dossier `frontend/` (Tauri 2 + Rust + Next.js 15).
 Licence MIT : le fork, le rebranding et la distribution interne sont autorisés.
 Deux obligations : **conserver le fichier `LICENSE.md` et la mention de copyright
-Zackriya Solutions**, et ne pas laisser croire que Maffioletti est l'éditeur
+Zackriya Solutions**, et ne pas laisser croire que Atex Italia est l'éditeur
 d'origine (un « Basato su Meetily (MIT) » dans l'écran À propos suffit).
 
 ---
@@ -11,10 +11,10 @@ d'origine (un « Basato su Meetily (MIT) » dans l'écran À propos suffit).
 ## 0. Créer le fork en gardant le lien avec l'amont
 
 ```bash
-git clone https://github.com/Zackriya-Solutions/meetily maffioletti-meet
-cd maffioletti-meet
+git clone https://github.com/Zackriya-Solutions/meetily atex-italia-meeting
+cd atex-italia-meeting
 git remote rename origin upstream          # l'amont, en lecture seule
-git remote add origin <votre-repo-git>     # GitLab Maffioletti
+git remote add origin <votre-repo-git>     # GitLab Atex Italia
 git checkout -b maffioletti
 git push -u origin maffioletti
 ```
@@ -112,11 +112,11 @@ direction.
 
 | Fichier | Champ | Nouvelle valeur |
 |---|---|---|
-| `src-tauri/tauri.conf.json` | `productName` | `Maffioletti Meet` |
-| | `identifier` | `it.maffioletti.meet` |
+| `src-tauri/tauri.conf.json` | `productName` | `Atex Italia Meeting` |
+| | `identifier` | `it.atexitalia.meeting` |
 | | `version` | `0.1.0` (repartir de zéro) |
-| | `app.windows[0].title` | `Maffioletti Meet` |
-| `package.json` | `name` | `maffioletti-meet` |
+| | `app.windows[0].title` | `Atex Italia Meeting` |
+| `package.json` | `name` | `atex-italia-meeting` |
 | `src-tauri/Cargo.toml` | `name`, `description` | idem |
 
 ⚠️ Changer l'`identifier` change l'emplacement des données applicatives
@@ -124,7 +124,7 @@ direction.
 installation Meetily existante — mais si quelqu'un a déjà testé Meetily sur son
 poste, ses enregistrements ne suivront pas.
 
-**Icônes** : préparer un PNG carré 1024×1024 du logo Maffioletti, puis
+**Icônes** : préparer un PNG carré 1024×1024 du logo Atex Italia, puis
 
 ```bash
 cd frontend
@@ -184,7 +184,7 @@ ce qui le justifie encore :
 
 1. retirer la télémétrie (§ 1.2) ;
 2. reprendre le contrôle de l'updater (§ 1.1) ;
-3. le rebranding Maffioletti (§ 2) ;
+3. le rebranding Atex Italia (§ 2) ;
 4. à terme, l'italianisation de l'interface.
 
 Si aucune des quatre ne compte vraiment, **installer Meetily tel quel et

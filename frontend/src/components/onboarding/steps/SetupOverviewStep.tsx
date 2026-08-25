@@ -46,7 +46,7 @@ export function SetupOverviewStep() {
   return (
     <OnboardingContainer
       title="Setup Overview"
-      description="Maffioletti Meet requires that you download the Transcription & Summarization AI models for the software to work."
+      description="Atex Italia Meeting requires that you download the Transcription & Summarization AI models for the software to work."
       step={2}
       totalSteps={isMac ? 4 : 3}
     >

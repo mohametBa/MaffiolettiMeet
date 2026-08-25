@@ -28,13 +28,13 @@ export function About() {
                 <div className="mb-3">
                     <Image
                         src="icon_128x128.png"
-                        alt="Maffioletti Meet"
+                        alt="Atex Italia Meeting"
                         width={64}
                         height={64}
                         className="mx-auto"
                     />
                 </div>
-                <h1 className="text-xl font-bold text-gray-900">Maffioletti Meet</h1>
+                <h1 className="text-xl font-bold text-gray-900">Atex Italia Meeting</h1>
                 <span className="text-sm text-gray-500"> v{currentVersion}</span>
                 <p className="text-medium text-gray-600 mt-1">
                     Real-time notes and summaries that never leave your machine.
@@ -43,7 +43,7 @@ export function About() {
 
             {/* Features Grid - Compact */}
             <div className="space-y-3">
-                <h2 className="text-base font-semibold text-gray-800">What makes Maffioletti Meet different</h2>
+                <h2 className="text-base font-semibold text-gray-800">What makes Atex Italia Meeting different</h2>
                 <div className="grid grid-cols-2 gap-2">
                     <div className="bg-gray-50 rounded p-3 hover:bg-gray-100 transition-colors">
                         <h3 className="font-bold text-sm text-gray-900 mb-1">Privacy-first</h3>
@@ -84,7 +84,7 @@ export function About() {
                     {' '}(licenza MIT) &mdash; &copy; Zackriya Solutions.
                 </p>
                 <p className="text-xs text-gray-400">
-                    Versione interna Maffioletti. Nessun dato lascia questo computer.
+                    Versione interna Atex Italia. Nessun dato lascia questo computer.
                 </p>
             </div>
             <AnalyticsConsentSwitch />

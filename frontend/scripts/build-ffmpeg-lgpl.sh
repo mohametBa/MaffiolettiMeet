@@ -1,5 +1,5 @@
 #!/bin/bash
-# Compile un ffmpeg minimal et redistribuable pour le sidecar de Maffioletti Meet.
+# Compile un ffmpeg minimal et redistribuable pour le sidecar de Atex Italia Meeting.
 #
 # POURQUOI : le paquet npm `ffmpeg-static` livre un binaire compile en
 # `--enable-gpl --enable-nonfree`, combinaison juridiquement non redistribuable.

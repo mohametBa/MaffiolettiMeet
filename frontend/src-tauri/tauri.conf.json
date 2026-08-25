@@ -1,8 +1,8 @@
 {
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-    "productName": "Maffioletti Meet",
+    "productName": "Atex Italia Meeting",
     "version": "0.1.0",
-    "identifier": "it.maffioletti.meet",
+    "identifier": "it.atexitalia.meeting",
     "build": {
         "frontendDist": "../out",
         "devUrl": "http://localhost:3118",
@@ -12,7 +12,7 @@
     "app": {
         "windows": [
             {
-                "title": "Maffioletti Meet",
+                "title": "Atex Italia Meeting",
                 "width": 1100,
                 "height": 700,
                 "resizable": true,
