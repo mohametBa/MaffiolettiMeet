@@ -96,9 +96,30 @@ Mac Intel (les scripts sont les mêmes).
 
 ### Windows
 
-Le build Windows doit se faire **sur une machine Windows** : whisper.cpp et
-llama.cpp sont compilés avec MSVC, il n'y a pas de compilation croisée depuis
-macOS.
+whisper.cpp et llama.cpp sont compilés avec MSVC : il n'y a **pas de compilation
+croisée depuis macOS**. Le build doit tourner sur Windows — soit sur un runner
+GitHub, soit sur un poste.
+
+#### Via GitHub Actions (recommandé)
+
+[`.github/workflows/maffioletti-windows.yml`](.github/workflows/maffioletti-windows.yml)
+rejoue sur `windows-latest` exactement les étapes décrites plus bas. Le dépôt
+étant public, les minutes sont gratuites.
+
+Onglet **Actions** → **Build Windows** → **Run workflow**. Le paramètre
+`acceleration` vaut `cpu` par défaut : c'est le bon choix pour un installeur
+distribué à un parc hétérogène, un build `cuda` ne démarrant pas sur un poste
+sans CUDA. `vulkan` est disponible pour un build accéléré si les postes visés
+ont des pilotes Vulkan à jour.
+
+Le `.exe` (NSIS) et le `.msi` sont téléchargeables en artefact du run. Premier
+run : 60–90 min (whisper.cpp et llama.cpp compilent de zéro) ; les suivants sont
+plus courts grâce au cache Cargo.
+
+⚠️ Sur un fork, GitHub désactive les workflows tant qu'on n'est pas passé une
+fois par l'onglet Actions pour les activer.
+
+#### Sur un poste Windows
 
 Prérequis : Node 20+, pnpm, Rust stable (toolchain `x86_64-pc-windows-msvc`),
 Visual Studio Build Tools avec la charge de travail « Développement Desktop
@@ -189,7 +210,8 @@ fois, à l'installation.
 
 ## Reste à faire
 
-- **Build Windows** : à produire sur une machine Windows (voir plus haut).
+- **Tester l'installeur Windows** : le workflow CI produit le `.exe`, reste à le
+  valider sur un poste réel (capture audio WASAPI, téléchargement des modèles).
 - **Italianisation de l'interface** (`frontend/src/`), chantier à part.
 - **Signature** : compte Apple Developer et/ou certificat de signature Windows,
   si les avertissements au premier lancement posent problème.

@@ -1,0 +1,165 @@
+# Build Windows de Maffioletti Meet, sur un runner GitHub.
+#
+# Pourquoi la CI : whisper.cpp et llama.cpp se compilent avec MSVC, il n'y a pas
+# de compilation croisee depuis macOS (voir FORK.md). Ce workflow fait donc sur
+# `windows-latest` exactement ce que FORK.md decrit pour un poste Windows.
+#
+# Declenchement manuel uniquement : onglet Actions -> "Build Windows" ->
+# "Run workflow". Les installeurs sortent en artefact du run.
+
+name: Build Windows
+
+on:
+  workflow_dispatch:
+    inputs:
+      acceleration:
+        description: "Acceleration whisper / llama"
+        type: choice
+        options:
+          - cpu
+          - vulkan
+        default: cpu
+
+concurrency:
+  group: build-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    # Le premier run compile whisper.cpp + llama.cpp depuis zero.
+    timeout-minutes: 180
+
+    env:
+      ACCEL: ${{ inputs.acceleration }}
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          # Le workspace Cargo est a la racine du depot, pas dans frontend/.
+          workspaces: ". -> target"
+          key: windows-${{ inputs.acceleration }}
+
+      # whisper-rs-sys genere ses bindings avec bindgen, qui a besoin de libclang.
+      - name: LLVM (libclang pour whisper-rs-sys)
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "C:\Program Files\LLVM\bin\libclang.dll")) {
+            Write-Host "LLVM absent de l'image, installation..."
+            choco install llvm -y --no-progress
+          }
+          "LIBCLANG_PATH=C:\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Vulkan SDK
+        if: inputs.acceleration == 'vulkan'
+        uses: humbletim/install-vulkan-sdk@v1.2
+        with:
+          version: 1.4.309.0
+          cache: true
+
+      - name: Dependances Node
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      # ORDRE CRITIQUE. src-tauri/build.rs appelle ensure_ffmpeg_binary() : si
+      # src-tauri/binaries/ffmpeg-<triple>.exe est absent au moment du build, il
+      # telecharge tout seul une build ffmpeg "essentials" qui est GPL, donc non
+      # redistribuable. En installant notre sidecar LGPL avant `tauri build`, le
+      # cache check de build.rs court-circuite ce telechargement.
+      # prepare-ffmpeg-sidecar.mjs refuse par ailleurs tout binaire --enable-gpl
+      # ou --enable-nonfree.
+      - name: Sidecar ffmpeg (LGPL)
+        working-directory: frontend
+        shell: pwsh
+        run: |
+          & powershell -ExecutionPolicy Bypass -File scripts\fetch-ffmpeg-windows.ps1
+          if ($LASTEXITCODE -ne 0) { throw "fetch-ffmpeg-windows.ps1 a echoue" }
+          node scripts/prepare-ffmpeg-sidecar.mjs
+          if ($LASTEXITCODE -ne 0) { throw "prepare-ffmpeg-sidecar.mjs a echoue" }
+
+      - name: Sidecar llama-helper
+        shell: pwsh
+        run: |
+          $triple = ((rustc -vV | Select-String '^host: ') -split '\s+')[1]
+          Write-Host "Target triple : $triple"
+          "TARGET_TRIPLE=$triple" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+          $cargoArgs = @('build', '--release', '-p', 'llama-helper')
+          if ($env:ACCEL -eq 'vulkan') { $cargoArgs += @('--features', 'vulkan') }
+          Write-Host "cargo $($cargoArgs -join ' ')"
+          & cargo @cargoArgs
+          if ($LASTEXITCODE -ne 0) { throw "build de llama-helper echoue" }
+
+          $dest = "frontend\src-tauri\binaries"
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Copy-Item "target\release\llama-helper.exe" "$dest\llama-helper-$triple.exe" -Force
+          Write-Host "sidecar llama-helper : $dest\llama-helper-$triple.exe"
+
+      - name: Build Tauri
+        working-directory: frontend
+        shell: pwsh
+        run: |
+          # tauri:build passe par auto-detect-gpu.js, qui n'a pas de sens sur un
+          # runner sans GPU : on choisit la cible explicitement.
+          if ($env:ACCEL -eq 'vulkan') {
+            pnpm run tauri:build:vulkan
+          } else {
+            pnpm run tauri:build:cpu
+          }
+          if ($LASTEXITCODE -ne 0) { throw "tauri build a echoue" }
+
+      # Garde-fou de conformite : on verifie sur le binaire reellement embarque
+      # qu'aucune build GPL/nonfree ne s'est glissee dans le bundle.
+      - name: Verifier la licence du ffmpeg embarque
+        shell: pwsh
+        run: |
+          $ff = "frontend\src-tauri\binaries\ffmpeg-$env:TARGET_TRIPLE.exe"
+          if (-not (Test-Path $ff)) { throw "sidecar ffmpeg introuvable : $ff" }
+          $banner = (& $ff -version 2>&1 | Out-String)
+          Write-Host ($banner -split "`n" | Select-Object -First 2)
+          foreach ($flag in @('--enable-gpl', '--enable-nonfree')) {
+            if ($banner -match [regex]::Escape($flag)) {
+              throw "ffmpeg embarque compile avec $flag : non redistribuable"
+            }
+          }
+          if ($banner -notmatch 'LGPL') { throw "licence ffmpeg inattendue (LGPL attendu)" }
+          Write-Host "OK : ffmpeg LGPL"
+
+      - name: Inventaire du bundle
+        if: always()
+        shell: pwsh
+        run: |
+          if (Test-Path "target\release\bundle") {
+            Get-ChildItem -Recurse "target\release\bundle" -Include *.exe, *.msi |
+              Select-Object FullName, @{n='MB';e={[math]::Round($_.Length/1MB,1)}} |
+              Format-Table -AutoSize
+          } else {
+            Write-Host "Aucun bundle produit."
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MaffiolettiMeet-windows-x64-${{ inputs.acceleration }}
+          path: |
+            target/release/bundle/nsis/*.exe
+            target/release/bundle/msi/*.msi
+          if-no-files-found: error
+          retention-days: 30
