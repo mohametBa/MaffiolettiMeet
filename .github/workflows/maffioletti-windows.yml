@@ -128,20 +128,35 @@ jobs:
 
       # Garde-fou de conformite : on verifie sur le binaire reellement embarque
       # qu'aucune build GPL/nonfree ne s'est glissee dans le bundle.
+      #
+      # Deux controles complementaires, sur deux sorties differentes :
+      #   `-version` porte la ligne `configuration:`, ou l'on refuse les
+      #             drapeaux non redistribuables ;
+      #   `-L`      imprime la licence effective, ou l'on exige la LGPL.
+      # Ne pas chercher la licence dans `-version` : elle n'y figure pas, ni
+      # pour une build LGPL ni pour une GPL.
       - name: Verifier la licence du ffmpeg embarque
         shell: pwsh
         run: |
           $ff = "frontend\src-tauri\binaries\ffmpeg-$env:TARGET_TRIPLE.exe"
           if (-not (Test-Path $ff)) { throw "sidecar ffmpeg introuvable : $ff" }
+
           $banner = (& $ff -version 2>&1 | Out-String)
-          Write-Host ($banner -split "`n" | Select-Object -First 2)
+          Write-Host (($banner -split "`r?`n") | Select-Object -First 1)
           foreach ($flag in @('--enable-gpl', '--enable-nonfree')) {
             if ($banner -match [regex]::Escape($flag)) {
               throw "ffmpeg embarque compile avec $flag : non redistribuable"
             }
           }
-          if ($banner -notmatch 'LGPL') { throw "licence ffmpeg inattendue (LGPL attendu)" }
-          Write-Host "OK : ffmpeg LGPL"
+
+          # Le texte de licence est retourne a la ligne apres « GNU Lesser
+          # General Public », d'ou un motif volontairement court.
+          $license = (& $ff -L 2>&1 | Out-String)
+          if ($license -notmatch 'Lesser General Public') {
+            Write-Host $license
+            throw "licence ffmpeg inattendue : LGPL attendue"
+          }
+          Write-Host "OK : ffmpeg LGPL, sans composant GPL ni nonfree"
 
       - name: Inventaire du bundle
         if: always()
