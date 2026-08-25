@@ -187,7 +187,24 @@ pub fn get_available_models() -> Vec<ModelDef> {
             context_size: 32768,
             layer_count: 32,
             sampling: SamplingParams::qwen35_summary(vec!["<|im_end|>".to_string()]),
-            description: "High-quality Qwen 3.5 model for built-in summaries. Best local Qwen option in the current lineup.".to_string(),
+            description: "High-quality Qwen 3.5 model for built-in summaries. Good balance on most machines.".to_string(),
+        },
+        // Qwen 3.5 9B - Maximum quality tier.
+        // 5.3 GiB on disk and roughly as much resident once loaded: this one is
+        // meant for machines with 16 GB of RAM or more, alongside Whisper.
+        // Qwen3.5-9B is wider rather than deeper than the 4B, hence the same
+        // layer count (num_hidden_layers = 32) despite twice the parameters.
+        ModelDef {
+            name: "qwen3.5:9b".to_string(),
+            display_name: "Qwen 3.5 9B (Maximum Quality)".to_string(),
+            gguf_file: "Qwen3.5-9B-Q4_K_M.gguf".to_string(),
+            template: "qwen3.5_nonthinking".to_string(),
+            download_url: "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-Q4_K_M.gguf".to_string(),
+            size_mb: 5417,
+            context_size: 32768,
+            layer_count: 32,
+            sampling: SamplingParams::qwen35_summary(vec!["<|im_end|>".to_string()]),
+            description: "Highest-quality Qwen 3.5 model for built-in summaries. Requires ~16GB RAM.".to_string(),
         },
         // Gemma 3 4B - Legacy alternative retained for users who prefer Gemma output.
         ModelDef {

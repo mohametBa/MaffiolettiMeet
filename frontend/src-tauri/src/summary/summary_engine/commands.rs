@@ -12,6 +12,7 @@ const QWEN35_4B_RECOMMENDED_RAM_GB: u64 = 14;
 
 pub(crate) fn summary_model_priority(model_name: &str) -> u8 {
     match model_name {
+        "qwen3.5:9b" => 5,
         "qwen3.5:4b" => 4,
         "qwen3.5:2b" => 3,
         "gemma3:4b" => 2,
@@ -382,10 +383,12 @@ pub async fn init_model_manager_at_startup<R: Runtime>(
 }
 
 
-/// Get recommended summary model based on platform and system RAM.
-/// macOS → qwen3.5:4b
-/// non-macOS + <8GB RAM → qwen3.5:2b
-/// non-macOS + >=8GB RAM → qwen3.5:4b
+/// Get recommended summary model based on system RAM.
+/// >= QWEN35_4B_RECOMMENDED_RAM_GB → qwen3.5:4b, sinon qwen3.5:2b.
+///
+/// Le 9B n'est volontairement jamais recommande d'office : 5,3 GiB a telecharger
+/// au premier lancement, c'est un choix que l'utilisateur fait dans les
+/// reglages, pas un defaut qu'on lui impose.
 #[tauri::command]
 pub async fn builtin_ai_get_recommended_model() -> Result<String, String> {
     let recommended = get_recommended_summary_model_for_current_system()?;
@@ -425,6 +428,7 @@ mod tests {
 
     #[test]
     fn available_summary_model_priority_prefers_qwen_over_gemma() {
+        assert!(summary_model_priority("qwen3.5:9b") > summary_model_priority("qwen3.5:4b"));
         assert!(summary_model_priority("qwen3.5:4b") > summary_model_priority("qwen3.5:2b"));
         assert!(summary_model_priority("qwen3.5:2b") > summary_model_priority("gemma3:4b"));
         assert!(summary_model_priority("gemma3:4b") > summary_model_priority("gemma3:1b"));
