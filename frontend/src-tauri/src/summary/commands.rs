@@ -89,6 +89,21 @@ pub async fn api_save_meeting_summary<R: Runtime>(
     match SummaryProcessesRepository::update_meeting_summary(pool, &meeting_id, &summary).await {
         Ok(true) => {
             log_info!("Summary saved successfully for meeting_id: {}", meeting_id);
+
+            // Keep summary.md in the recording folder in sync with the edited summary.
+            if let Some(markdown) = summary.get("markdown").and_then(|m| m.as_str()) {
+                if let Err(e) =
+                    SummaryService::export_summary_to_meeting_folder(pool, &meeting_id, markdown)
+                        .await
+                {
+                    log_warn!(
+                        "Failed to write summary.md for meeting_id {}: {}",
+                        meeting_id,
+                        e
+                    );
+                }
+            }
+
             Ok(serde_json::json!({
                 "message": "Meeting summary saved successfully"
             }))

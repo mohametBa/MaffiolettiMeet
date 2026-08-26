@@ -3,6 +3,7 @@ use crate::database::repositories::{
 };
 use crate::summary::llm_client::LLMProvider;
 use crate::summary::language_detection::detect_summary_language;
+use crate::summary::export::write_summary_markdown;
 use crate::summary::metadata::read_detected_summary_language_from_metadata;
 use crate::summary::processor::{
     extract_meeting_name_from_markdown, generate_meeting_summary, language_name_from_code,
@@ -581,6 +582,17 @@ impl SummaryService {
                         meeting_id
                     );
                 }
+
+                // Mirror the summary into the meeting folder so an exported folder
+                // carries the summary alongside the audio and the transcript.
+                if let Err(e) =
+                    Self::export_summary_to_meeting_folder(&pool, &meeting_id, &final_markdown).await
+                {
+                    warn!(
+                        "Failed to write summary.md for meeting_id {}: {}",
+                        meeting_id, e
+                    );
+                }
             }
             Err(e) => {
                 // Check if error is due to cancellation
@@ -594,6 +606,34 @@ impl SummaryService {
                 }
             }
         }
+    }
+
+    /// Writes the summary as `summary.md` inside the meeting's recording folder.
+    ///
+    /// Meetings without a `folder_path` (legacy rows) are skipped silently.
+    pub(crate) async fn export_summary_to_meeting_folder(
+        pool: &SqlitePool,
+        meeting_id: &str,
+        markdown: &str,
+    ) -> Result<(), String> {
+        let meeting = MeetingsRepository::get_meeting_metadata(pool, meeting_id)
+            .await
+            .map_err(|e| format!("Failed to load meeting metadata: {}", e))?
+            .ok_or_else(|| format!("Meeting not found: {}", meeting_id))?;
+
+        let Some(folder) = meeting.folder_path.filter(|p| !p.trim().is_empty()) else {
+            info!(
+                "Meeting {} has no recording folder, skipping summary.md export",
+                meeting_id
+            );
+            return Ok(());
+        };
+
+        write_summary_markdown(Path::new(&folder), Some(&meeting.title), markdown)
+            .map_err(|e| e.to_string())?;
+
+        info!("Wrote summary.md to {}", folder);
+        Ok(())
     }
 
     /// Updates the summary process status to failed with error message
