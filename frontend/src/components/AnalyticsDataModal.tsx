@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Info, Shield } from 'lucide-react';
+import { getVersion } from '@tauri-apps/api/app';
 
 interface AnalyticsDataModalProps {
   isOpen: boolean;
@@ -10,6 +11,14 @@ interface AnalyticsDataModalProps {
 }
 
 export default function AnalyticsDataModal({ isOpen, onClose, onConfirmDisable }: AnalyticsDataModalProps) {
+  // The sample below documents what is actually sent, so its version must match
+  // what the app reports rather than a value frozen at authoring time.
+  const [appVersion, setAppVersion] = useState<string>('');
+
+  useEffect(() => {
+    getVersion().then(setAppVersion).catch(console.error);
+  }, []);
+
   if (!isOpen) return null;
 
   return (
@@ -123,7 +132,7 @@ export default function AnalyticsDataModal({ isOpen, onClose, onConfirmDisable }
             <pre className="text-xs text-gray-700 overflow-x-auto">
               {`{
   "event": "meeting_ended",
-  "app_version": "0.4.0",
+  "app_version": "${appVersion}",
   "transcription_provider": "parakeet",
   "transcription_model": "parakeet-tdt-0.6b-v3-int8",
   "summary_provider": "ollama",

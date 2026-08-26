@@ -1,6 +1,6 @@
 [package]
 name = "atex-italia-meeting"
-version = "0.1.0"
+version = "0.2.0"
 description = "Atex Italia Meeting - prise de notes de réunion en local"
 authors = ["Atex Italia"]
 license = "MIT"
