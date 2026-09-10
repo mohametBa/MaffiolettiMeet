@@ -63,15 +63,41 @@ conflits lors d'un rebase sur l'amont.
    pas reprise.
 
 6. **Identité visuelle** — icône de l'app et assets d'interface repris du logo
-   Atex Italia. Les fichiers de travail sont dans [`brand/`](brand/) ; le master
-   de l'icône est `frontend/src-tauri/app-icon.png` (1024×1024).
-   Pour la régénérer après modification :
+   Atex Italia. Les fichiers de travail sont dans [`brand/`](brand/).
+
+   La source de l'icône est **vectorielle** : `frontend/src-tauri/app-icon.svg`
+   (hexagone Atex + microphone, orange `#F99B33`, fond transparent). C'est ce
+   fichier qu'il faut modifier ; `app-icon.png` (1024×1024) n'en est que le
+   rendu, et tout le reste découle du PNG.
+
+   Rendu du SVG en PNG — aucun outil à installer, Chrome sait le faire :
+
+   ```bash
+   # l'HTML centre le SVG à 880 px sur un canevas transparent de 1024×1024
+   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+     --headless=new --disable-gpu --hide-scrollbars \
+     --default-background-color=00000000 --force-device-scale-factor=1 \
+     --screenshot=frontend/src-tauri/app-icon.png --window-size=1024,1024 \
+     file:///chemin/vers/icon.html
+   ```
+
+   Puis la déclinaison en tous formats :
 
    ```bash
    cd frontend
    pnpm tauri icon src-tauri/app-icon.png
    rm -rf src-tauri/icons/android src-tauri/icons/ios   # desktop only
    ```
+
+   `pnpm tauri icon` ne touche pas à trois fichiers qui doivent suivre à la main :
+   `frontend/public/icon_128x128.png` (écran « À propos »), `public/icon_32x32@2x.png`
+   et `frontend/src/app/favicon.ico` (copie de `src-tauri/icons/icon.ico`).
+
+   ⚠️ L'icône est **compilée dans le bundle**. Il n'y a pas d'updater : un poste
+   déjà équipé garde l'ancienne icône tant qu'il n'a pas réinstallé l'app.
+   Sur macOS, le Dock peut même conserver l'ancienne après réinstallation
+   (cache d'icônes) — supprimer l'ancienne app d'`/Applications` avant de
+   copier la nouvelle évite le problème.
 
 ## Construire l'app
 

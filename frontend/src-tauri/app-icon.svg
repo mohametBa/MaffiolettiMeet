@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 483" width="512" height="483">
+  <!-- Esagono -->
+  <polygon points="140,26 372,26 486,241.5 372,457 140,457 26,241.5"
+           fill="none" stroke="#F99B33" stroke-width="30" stroke-linejoin="miter"/>
+  <!-- Microfono -->
+  <g fill="none" stroke="#F99B33" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+    <!-- capsula -->
+    <rect x="207" y="118" width="98" height="176" rx="49" fill="#F99B33" stroke="none"/>
+    <!-- supporto -->
+    <path d="M160 238 a96 96 0 0 0 192 0"/>
+    <!-- asta -->
+    <line x1="256" y1="334" x2="256" y2="380"/>
+    <!-- base -->
+    <line x1="196" y1="380" x2="316" y2="380"/>
+  </g>
+</svg>
